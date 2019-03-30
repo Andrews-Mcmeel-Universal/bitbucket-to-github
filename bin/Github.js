@@ -100,7 +100,7 @@ class Github {
 
     // initialize a folder and git repo on this machine
     // add Bitbucket as a remote and pull
-    let commands = ` cd ${pathToRepo} \
+    const commands = ` cd ${pathToRepo} \
                 && git init \
                 && git remote set-url origin https://${
                   process.env.GITHUB_USERNAME
