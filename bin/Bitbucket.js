@@ -81,12 +81,12 @@ class Bitbucket {
     let commands = `mkdir ${pathToRepo}  \
                 && cd ${pathToRepo} \
                 && git init \
-                && git remote add origin ${repository.links.clone[0].href} \
+                && git remote add origin ${repository.links.clone[1].href} \
                 && git pull origin master`;
     try {
       // initialize repo
       await exec(commands);
-      
+
     } catch (e) {
       console.log("couldn't pull repository", repository.slug);
       throw e;
