@@ -11,21 +11,17 @@ class Github {
    * @returns {Array} of successfully created `repositories`
    */
   static async createRepositories(repositories) {
-    // keep track of which repos have failed to be created on Github
     const successfulRepos = [];
+    await Promise.all(repositories.map(async repo => {
+      try {
+        await Github.createRepository(repo);
+        successfulRepos.push(repo);
+        console.log(`created repository for ${repo.slug}`);
 
-    for (let i = 0; i < repositories.length; i++) {
-      // create the repository
-      let success = await Github.createRepository(repositories[i]);
-
-      // we don't want to try to clone to existing repos later
-      if (success) {
-        console.log("created repository for", repositories[i].slug);
-        successfulRepos.push(repositories[i]);
+      } catch (error) {
+        console.log(`error creating repository for ${repo.slug}`);
       }
-    }
-
-    return successfulRepos;
+    }));
   }
 
   /**
@@ -64,10 +60,8 @@ class Github {
           errors[i].message + "."
         );
       }
-      return false;
+      throw e;
     }
-
-    return true;
   }
 
   static async pushRepositories(repositories) {

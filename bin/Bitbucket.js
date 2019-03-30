@@ -46,14 +46,13 @@ class Bitbucket {
    * @param {Array} repositories
    */
   static async pullRepositories(repositories) {
-    const successfulRepos = await Promise.all(
-      repositories.map(
-        async repo => {
+    const successfulRepos = [];
+    await Promise.all(repositories.map(async repo => {
           console.log(`pulling repository ${repo.slug}`)
           try {
-            const success = await Bitbucket.pullRepository(repo);
+            await Bitbucket.pullRepository(repo);
+            successfulRepos.push(repo);
             console.log("pulled repository for", repo.slug);
-            return success;
           } catch (error) {
             console.error(`error pulling repository ${repo.slug}`)
           }
@@ -87,13 +86,10 @@ class Bitbucket {
     try {
       // initialize repo
       await exec(commands);
-
-      return true;
     } catch (e) {
       console.log("couldn't pull repository", repository.slug);
+      throw e;
     }
-
-    return false;
   }
 }
 
