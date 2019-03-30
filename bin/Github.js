@@ -22,6 +22,7 @@ class Github {
         console.log(`error creating repository for ${repo.slug}`);
       }
     }));
+    return successfulRepos;
   }
 
   /**
