@@ -13,18 +13,13 @@ class Bitbucket {
     const repoList = [];
 
     // a page of repos we get back from Bitbucket
-    let response;
-
-    // page counter for api requests
-    let currentPage = 1;
+    let response = {};
 
     do {
+      const url = response.next || `https://api.bitbucket.org/2.0/repositories/${process.env.BITBUCKET_USERNAME}?page=1`
       // make a request to the Bitbucket API
       response = await request(
-        "https://api.bitbucket.org/2.0/repositories/" +
-          process.env.BITBUCKET_USERNAME +
-          "?page=" +
-          currentPage,
+        url,
         {
           auth: {
             // fill in Bitbucket credentials in .env file
@@ -37,9 +32,6 @@ class Bitbucket {
 
       // compile the repos we just got into an array
       repoList.push(...response.values);
-
-      // make sure we query the next page next time we call the API
-      currentPage++;
 
       // while there's another page to hit, loop
     } while (response.next);
@@ -54,17 +46,20 @@ class Bitbucket {
    * @param {Array} repositories
    */
   static async pullRepositories(repositories) {
-    const successfulRepos = [];
-    for (let i = 0; i < repositories.length; i++) {
-      // create the repository
-      let success = await Bitbucket.pullRepository(repositories[i]);
+    const successfulRepos = await Promise.all(
+      repositories.map(
+        async repo => {
+          console.log(`pulling repository ${repo.slug}`)
+          try {
+            const success = await Bitbucket.pullRepository(repo);
+            console.log("pulled repository for", repo.slug);
+            return success;
+          } catch (error) {
+            console.error(`error pulling repository ${repo.slug}`)
+          }
+        }
+      ));
 
-      // we don't want to try to push to repos that errored out
-      if (success) {
-        console.log("pulled repository for", repositories[i].slug);
-        successfulRepos.push(repositories[i]);
-      }
-    }
     return successfulRepos;
   }
 
