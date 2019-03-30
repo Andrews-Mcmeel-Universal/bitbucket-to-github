@@ -86,6 +86,7 @@ class Bitbucket {
     try {
       // initialize repo
       await exec(commands);
+      
     } catch (e) {
       console.log("couldn't pull repository", repository.slug);
       throw e;

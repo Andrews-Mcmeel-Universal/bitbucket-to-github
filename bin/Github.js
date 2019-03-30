@@ -67,17 +67,16 @@ class Github {
   static async pushRepositories(repositories) {
     // keep track of which repos have failed to be pushed to Github
     const successfulRepos = [];
-
-    for (let i = 0; i < repositories.length; i++) {
-      // create the repository
-      let success = await Github.pushRepository(repositories[i]);
-
-      // keep track of which repos were pushed for reporting
-      if (success) {
-        console.log("pushed repository for", repositories[i].slug);
-        successfulRepos.push(repositories[i]);
+    await Promise.all(repositories.map(async repo => {
+      try {
+        await Github.pushRepository(repo);
+        successfulRepos.push(repo);
+        console.log(`successfully pushed repository ${repo.slug}`);
+      } catch (e) {
+        console.log(e);
+        console.log(`failed to push repository ${repo.slug}`);
       }
-    }
+    }));
     return successfulRepos;
   }
 
@@ -111,14 +110,10 @@ class Github {
     try {
       // initialize repo
       await exec(commands);
-
-      return true;
     } catch (e) {
       console.log(e);
       console.log("couldn't push repository", repository.slug);
     }
-
-    return false;
   }
 }
 
