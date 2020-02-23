@@ -4,10 +4,9 @@ This repository transfers ALL of your Bitbucket repositories to Github while mai
 
 ### Changes made in the fork
 
-* Make use of exception handling, instead of passing flag to indicate status
-* Make use of `Promise.all()` to pull/create/push repos "at the same time"
-* Repositories are cloned using SSH instead of HTTPS.
-
+- Make use of exception handling, instead of passing flag to indicate status
+- Make use of `Promise.all()` to pull/create/push repos "at the same time"
+- Repositories are cloned using SSH instead of HTTPS.
 
 ### Getting Started
 
@@ -43,4 +42,25 @@ This repository uses the `dotenv` library to handle configuration variables.
 
 ##### Run the script
 
-`node index.js`
+```javascript
+`node -r dotenv/config index.js`;
+```
+
+## Resources
+
+1. Github command line instructions: https://help.github.com/en/github/importing-your-projects-to-github/importing-a-git-repository-using-the-command-line
+
+## AMU Notes
+
+### NOTES
+
+```bash
+git clone --mirror https://bitbucket.org/exampleuser/repository-to-mirror.git
+# Make a bare mirrored clone of the repository
+
+cd repository-to-mirror.git
+git remote set-url --push origin https://github.com/exampleuser/mirrored
+# Set the push location to your mirror
+
+git push --mirror
+```
