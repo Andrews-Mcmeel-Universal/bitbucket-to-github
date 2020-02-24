@@ -12,19 +12,47 @@ console.log(
 (async () => {
   // get all the bitbucket repositories we're going to transfer
   const repositories = await Bitbucket.getRepositories();
+  console.log(`********** STEP 1: Has successfully finished!\r\nREPOS RETRIEVED FROM BITBUCKET: ${repositories.length}`);
+
+
 
   // create a new repository on Github for the repos
   const successfulCreates = await Github.createRepositories(repositories);
+  if (successfulCreates && successfulCreates.length) {
+    console.log(
+      `********** STEP 2: Has successfully finished!\r\nREPOS CREATED: ${successfulCreates.length} / ${repositories.length}`
+    );
+  } else {
+    console.log(
+      "********** STEP 2: Has finished.  However there were 0 repos created."
+    );
+  }
+
+
 
   // clone into a local folder
   const successfulClones = await Bitbucket.pullRepositories(successfulCreates);
+  if (successfulPushes && successfulPushes.length) {
+    console.log(
+      `********** STEP 3: Has successfully finished!\r\nREPOS CLONED LOCALLY: ${successfulClones.length} / ${repositories.length}`
+    );
+  } else {
+    console.log(
+      "********** STEP 3: Has finished.  However there were 0 repos cloned."
+    );
+  }
 
-  // push to Github
-  const succesfulPushes = await Github.pushRepositories(successfulClones);
 
-  console.log(
-    `The Bitbucket-to-Github Migrater has successfully finished!\r\nREPOS MIGRATED: ${succesfulPushes
-      .map(repo => repo.slug)
-      .join("\r\n")} / ${repositories.length}`
-  );
+
+  // Push to Github
+  const successfulPushes = await Github.pushRepositories(successfulClones);
+  if (successfulPushes && successfulPushes.length) {
+    console.log(
+      `********** STEP 4: Has successfully finished!\r\nREPOS MIGRATED: ${successfulPushes.length} / ${repositories.length}`
+    );
+  } else {
+    console.log(
+      "********** STEP 4: Has finished.  However there were 0 repos pushed."
+    );
+  }
 })();
