@@ -50,12 +50,10 @@ class Bitbucket {
       }
 
       // while there's another page to hit, loop
-    } while (response.next);
-
-    // repoList.slice(process.env.REPO_LIMIT);
-      console.log(
-        `BITBUCKET: Finished building the entire repo list and the current.`
-      );
+    } while (response.next && process.env.REPO_LIMIT && (repoList.length <= process.env.REPO_LIMIT));
+    console.log(
+      `BITBUCKET: Finished building the entire repo list of ${repoList.length}.`
+    );
     return repoList;
   }
 
