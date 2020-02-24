@@ -1,6 +1,6 @@
 const Bitbucket = require("./bin/Bitbucket");
 const Github = require("./bin/Github");
-const dotenv = require("dotenv");
+require("dotenv").config();
 
 // load in our environment variables
 // node -r dotenv/config index.js
@@ -18,9 +18,9 @@ console.log(
 
   // create a new repository on Github for the repos
   const successfulCreates = await Github.createRepositories(repositories);
-  if (successfulCreates && successfulCreates.length) {
+  if (successfulRepos !== undefined && successfulRepos.length) {
     console.log(
-      `********** STEP 2: Has successfully finished!\r\nREPOS CREATED: ${successfulCreates.length} / ${repositories.length}`
+      `********** STEP 2: Has successfully finished!\r\nREPOS CREATED: ${successfulRepos.length} / ${repositories.length}`
     );
   } else {
     console.log(
@@ -32,9 +32,9 @@ console.log(
 
   // clone into a local folder
   const successfulClones = await Bitbucket.pullRepositories(successfulCreates);
-  if (successfulPushes && successfulPushes.length) {
+  if (successfulRepos && successfulRepos.length) {
     console.log(
-      `********** STEP 3: Has successfully finished!\r\nREPOS CLONED LOCALLY: ${successfulClones.length} / ${repositories.length}`
+      `********** STEP 3: Has successfully finished!\r\nREPOS CLONED LOCALLY: ${successfulRepos.length} / ${repositories.length}`
     );
   } else {
     console.log(
@@ -46,9 +46,9 @@ console.log(
 
   // Push to Github
   const successfulPushes = await Github.pushRepositories(successfulClones);
-  if (successfulPushes && successfulPushes.length) {
+  if (successfulRepos && successfulRepos.length) {
     console.log(
-      `********** STEP 4: Has successfully finished!\r\nREPOS MIGRATED: ${successfulPushes.length} / ${repositories.length}`
+      `********** STEP 4: Has successfully finished!\r\nREPOS MIGRATED: ${successfulRepos.length} / ${repositories.length}`
     );
   } else {
     console.log(
