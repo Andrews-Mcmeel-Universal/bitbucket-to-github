@@ -4,21 +4,25 @@ This repository transfers ALL of your Bitbucket repositories to Github while mai
 
 ### Changes made in the fork
 
-- Make use of exception handling, instead of passing flag to indicate status
-- Make use of `Promise.all()` to pull/create/push repos "at the same time"
-- Repositories are cloned using SSH instead of HTTPS.
+- Improved logging for clearer visibility into what's happening during the process.
+  - Including the start and stopping of the main functions within index.js.
+  - Outputting the non-sensitive dotenv vars as they are processed to notify the engineer if variables are not instantiating. (My experience.)
+- Optional organization flags (Bitbucket Organization and Github Teams) that can be used instead of a user.
+- Yarn usage.
+- Testing dotenv flag to only test a single repo.
+- More graceful fallbacks if directories have already been made.
 
-### Getting Started
+### Requirements
 
-Make sure you have node and npm before continuing.
+1. Node
+2. Yarn
+3. Save the .env.sample as a new file named: .env and then follow the instructions to fill out all the values, FIRST!
 
-##### Add your SSH public key to Bitbucket
+### General Process Explained
 
-Since this version of the script is cloning Bitbucket repos with SSH, make sure your SSH public key is added into Bitbucket settings.
+TBD
 
-##### Clone the repo
-
-`git clone https://github.com/pouriaa/bitbucket-to-github.git`
+1. `git clone https://github.com/pouriaa/bitbucket-to-github.git`
 
 ##### Enter the repo
 
@@ -50,17 +54,11 @@ This repository uses the `dotenv` library to handle configuration variables.
 
 1. Github command line instructions: https://help.github.com/en/github/importing-your-projects-to-github/importing-a-git-repository-using-the-command-line
 
-## AMU Notes
+## TODOS
 
-### NOTES
-
-```bash
-git clone --mirror https://bitbucket.org/exampleuser/repository-to-mirror.git
-# Make a bare mirrored clone of the repository
-
-cd repository-to-mirror.git
-git remote set-url --push origin https://github.com/exampleuser/mirrored
-# Set the push location to your mirror
-
-git push --mirror
-```
+1. Wrap all console logs into a verbose flag.
+2. Fix testing logic being TEST_MODE and REPO_LIMIT flag
+3. Add optional flag for "mirroring/syncing" a repo to both bitbucket and github.
+4. Improve the failsafes for operations that have already occurred.
+5. Potentially use GM's node service worker prototype to visually represent this utility.
+6. Add back in the dotenv.config() so variables are not required during the command line script.

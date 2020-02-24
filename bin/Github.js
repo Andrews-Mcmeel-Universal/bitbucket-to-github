@@ -26,9 +26,15 @@ class Github {
         }
       })
     );
-    console.log(
-      `Github: Finishing creation of ${succesfulRepos.length || 0}/${repositories.length} repositories.`
-    );
+    if (successfulRepos && successfulRepos.length) {
+      console.log(
+        `Github: Finishing creation of ${successfulRepos.length || 0}/${
+        repositories.length
+        } repositories.`
+      );
+    } else {
+      console.log(`GITHUB: Finished the creation step but 0 new repos were created.`)
+    }
     return successfulRepos;
   }
 

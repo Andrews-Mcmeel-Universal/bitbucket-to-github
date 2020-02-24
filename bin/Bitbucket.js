@@ -11,7 +11,7 @@ class Bitbucket {
   static async getRepositories() {
     // use this to compile a list of our repos
     console.log(
-      `BITBUCKET: Getting the repository list for the organization: ${process.env.BITBUCKET_ACCOUNT_ID}`
+      `BITBUCKET: Getting the repository list for the organization: ${process.env.BITBUCKET_WORKSPACE_ID}`
     );
     const repoList = [];
 
@@ -24,14 +24,14 @@ class Bitbucket {
     do {
       const url =
         response.next ||
-        `https://api.bitbucket.org/2.0/repositories/${process.env.BITBUCKET_ACCOUNT_ID}?page=${currentPage}`;
+        `https://api.bitbucket.org/2.0/repositories/${process.env.BITBUCKET_WORKSPACE_ID}?page=${currentPage}`;
       console.log(`BITBUCKET: The current api url being called is: ${url}`);
       // make a request to the Bitbucket API
       response = await request(url, {
         auth: {
-          // fill in Bitbucket credentials in .env file.  NOTE: This points at a bitbucket organization, if you'd prefer a user, replace: BITBUCKET_ACCOUNT_ID with BITBUCKET_USERNAME
-          user: process.env.BITBUCKET_ACCOUNT_ID,
-          password: process.env.BITBUCKET_PASSWORD
+          // fill in Bitbucket credentials in .env file.  NOTE: This points at a bitbucket organization, if you'd prefer a user, replace: BITBUCKET_WORKSPACE_ID with BITBUCKET_USERNAME
+          user: process.env.BITBUCKET_WORKSPACE_ID,
+          password: process.env.BITBUCKET_APP_PASSWORD
         },
         json: true
       });
@@ -52,7 +52,10 @@ class Bitbucket {
       // while there's another page to hit, loop
     } while (response.next);
 
-    console.log("BITBUCKET: Finished building the entire repo list.");
+    // repoList.slice(process.env.REPO_LIMIT);
+      console.log(
+        `BITBUCKET: Finished building the entire repo list and the current.`
+      );
     return repoList;
   }
 
@@ -63,11 +66,12 @@ class Bitbucket {
    * @param {Array} repositories
    * @param {Integer} limit
    */
-  static async pullRepositories(repositories, limit = null) {
+  static async pullRepositories(repositories) {
     const successfulRepos = [];
-    if (limit > 0) {
-      repositories = repositories.slice(limit);
-    }
+    // if (limit > 0) {
+    //   repositories.slice(limit);
+    //   console.log(`The limit has been set to ${limit} and repositories are limited to ${repositories.length}`);
+    // }
     await Promise.all(
       repositories.map(async repo => {
         console.log(`pulling repository ${repo.slug}`);
@@ -97,11 +101,11 @@ class Bitbucket {
       "../repositories/",
       repository.slug
     );
-
-    // Makes a bare clone of the external repository in a local directory
-    let commands = `mkdir ${pathToRepo}  \
+    console.log(`BITBUCKET: Preparing to setup a directory here: ${pathToRepo} and then mirror clone this repo: ${repository.links.clone[1].href} `)
+    // Creates a brand new local directory for repository.  Navigates into it and mirror clones it from bitbucket.  Finally, adding the remote
+    let commands = `mkdir -p ${pathToRepo} \
                 && cd ${pathToRepo} \
-                && git clone --bare ${repository.links.clone[1].href}`;
+                && git clone --mirror ${repository.links.clone[1].href}`;
     try {
       // initialize repo
       await exec(commands);
