@@ -6,7 +6,7 @@ const dotenv = require("dotenv");
 // node -r dotenv/config index.js
 
 console.log(
-  `MIGRATER: Loaded your dotenv vars: ${process.env.BITBUCKET_ACCOUNT_ID} and TEST_MODE=${process.env.TEST_MODE}`
+  `MIGRATER: Loaded your dotenv vars: ${process.env.BITBUCKET_WORKSPACE_ID} and TEST_MODE=${process.env.TEST_MODE}`
 );
 
 (async () => {
@@ -17,13 +17,14 @@ console.log(
   const successfulCreates = await Github.createRepositories(repositories);
 
   // clone into a local folder
-  const successfulClones = await Bitbucket.pullRepositories(successfulCreates, process.env.REPO_LIMIT);
+  const successfulClones = await Bitbucket.pullRepositories(successfulCreates);
 
   // push to Github
   const succesfulPushes = await Github.pushRepositories(successfulClones);
 
   console.log(
-    "Migrated the following repos sucessfully:\r\n",
-    succesfulPushes.map(repo => repo.slug).join("\r\n")
+    `The Bitbucket-to-Github Migrater has successfully finished!\r\nREPOS MIGRATED: ${succesfulPushes
+      .map(repo => repo.slug)
+      .join("\r\n")} / ${repositories.length}`
   );
 })();
