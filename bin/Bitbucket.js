@@ -13,7 +13,7 @@ class Bitbucket {
     console.log(
       `BITBUCKET: Getting the repository list for the organization: ${process.env.BITBUCKET_WORKSPACE_ID}`
     );
-    const repoList = [];
+    const repositoryList = [];
 
     // a page of repos we get back from Bitbucket
     let response = {};
@@ -22,9 +22,10 @@ class Bitbucket {
     let currentPage = 1;
 
     do {
+      const pageLength = process.env.REPO_LIMIT ? `&pagelen=${process.env.REPO_LIMIT}` : '';
       const url =
         response.next ||
-        `https://api.bitbucket.org/2.0/repositories/${process.env.BITBUCKET_WORKSPACE_ID}?page=${currentPage}`;
+        `https://api.bitbucket.org/2.0/repositories/${process.env.BITBUCKET_WORKSPACE_ID}?page=${currentPage}${pageLength}`;
       console.log(`BITBUCKET: The current api url being called is: ${url}`);
       // make a request to the Bitbucket API
       response = await request(url, {
@@ -38,10 +39,10 @@ class Bitbucket {
 
       // compile the repos we just got into an array
       console.log("BITBUCKET: Pushing repository listing into our array.");
-      repoList.push(...response.values);
+      repositoryList.push(...response.values);
 
       // make sure we query the next page next time we call the API
-      if (process.env.TEST_MODE === 'true') {
+      if (process.env.TEST_MODE === "true") {
         console.log(
           `BITBUCKET: In is in test mode: ${process.env.TEST_MODE}, do not process all paginated repos.  It will only do the first page.`
         );
@@ -50,11 +51,15 @@ class Bitbucket {
       }
 
       // while there's another page to hit, loop
-    } while (response.next && process.env.REPO_LIMIT && (repoList.length <= process.env.REPO_LIMIT));
-    console.log(
-      `BITBUCKET: Finished building the entire repo list of ${repoList.length}.`
+    } while (
+      response.next &&
+      process.env.REPO_LIMIT &&
+      repositoryList.length <= process.env.REPO_LIMIT
     );
-    return repoList;
+    console.log(
+      `BITBUCKET: Finished building the entire repo list of ${repositoryList.length}.`
+    );
+    return repositoryList;
   }
 
   /**
@@ -65,25 +70,21 @@ class Bitbucket {
    * @param {Integer} limit
    */
   static async pullRepositories(repositories) {
-    const successfulRepos = [];
-    // if (limit > 0) {
-    //   repositories.slice(limit);
-    //   console.log(`The limit has been set to ${limit} and repositories are limited to ${repositories.length}`);
-    // }
+    const successfulRepositories = [];
     await Promise.all(
-      repositories.map(async repo => {
-        console.log(`pulling repository ${repo.slug}`);
+      repositories.map(async repository => {
+        console.log(`pulling repository ${repository.slug}`);
         try {
-          await Bitbucket.pullRepository(repo);
-          successfulRepos.push(repo);
-          console.log("pulled repository for", repo.slug);
+          await Bitbucket.pullRepository(repository);
+          successfulRepositories.push(repository);
+          console.log("pulled repository for", repository.slug);
         } catch (error) {
-          console.error(`error pulling repository ${repo.slug}`);
+          console.error(`error pulling repository ${repository.slug}`);
         }
       })
     );
 
-    return successfulRepos;
+    return successfulRepositories;
   }
 
   /**
@@ -94,22 +95,21 @@ class Bitbucket {
    */
   static async pullRepository(repository) {
     // path to the local repository
-    const pathToRepo = path.resolve(
+    const pathToRepository = path.resolve(
       __dirname,
       "../repositories/",
       repository.slug
     );
-    console.log(`BITBUCKET: Preparing to setup a directory here: ${pathToRepo} and then mirror clone this repo: ${repository.links.clone[1].href} `)
+    // console.log(`BITBUCKET: Preparing to setup a directory here: ${pathToRepository} and then mirror clone this repo: ${repository.links.clone[1].href} `)
     // Creates a brand new local directory for repository.  Navigates into it and mirror clones it from bitbucket.  Finally, adding the remote
-    let commands = `mkdir -p ${pathToRepo} \
-                && cd ${pathToRepo} \
+    let commands = ` mkdir -p ${pathToRepository} \
+                && cd ${pathToRepository} \
                 && git clone --mirror ${repository.links.clone[1].href}`;
     try {
       // initialize repo
       await exec(commands);
     } catch (e) {
-      console.log("couldn't pull repository", repository.slug);
-      throw e;
+      console.log(`Could not pull the repository ${repository.slug} because of the error: ${e}`);
     }
   }
 }

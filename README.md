@@ -27,11 +27,12 @@ The steps below is how each sequential repository gets processed individually.
 
 #### Duplicating a Bitbucket repository to Github a Single Time
 
-1. `git clone --mirror https://bitbucket.com/amu_technology/old-repository.git`
-2. `cd old-repository.git`
-3. `git push --mirror https://github.com/exampleuser/new-repository.git`
-4. `cd ..`
-5. `rm -rf old-repository.git`
+1. `cd repositories/ && mkdir archive-client_admin && cd archive-client_admin/`
+2. `git clone --mirror https://bitbucket.com/amu_technology/archive-client_admin.git`
+3. `cd archive-client_admin.git`
+4. `git push --mirror https://abarrows:3fb89505c765f7a8818aeaeb0e356c8e4af2b1f7@github.com/abarrows/archive-client_admin.git`
+
+5. OPTIONAL CLEANUP:`cd ../../ && rm -rf archive-client_admin`
 
 #### Mirroring a Bitbucket repository to Github
 
@@ -55,3 +56,8 @@ The steps below is how each sequential repository gets processed individually.
 4. Improve the failsafes for operations that have already occurred.
 5. Potentially use GM's node service worker prototype to visually represent this utility.
 6. Add back in the dotenv.config() so variables are not required during the command line script.
+
+## Resources
+
+1. Github Instructions on this topic: https://help.github.com/en/github/importing-your-projects-to-github/importing-a-git-repository-using-the-command-line
+2. GUI Importer for failed repositories: https://help.github.com/en/github/importing-your-projects-to-github/importing-a-repository-with-github-importer

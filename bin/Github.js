@@ -4,43 +4,35 @@ const exec = require("util").promisify(require("child_process").exec);
 
 class Github {
   /**
-   * Create repositories on Github an array
+   * Checks repositories on Github an array
    * of Bitbucket repositories
    *
    * @param {Array} repositories
-   * @returns {Array} of successfully created `repositories`
+   * @returns {Array} of successful found `repositories`
+   * @returns {Array} of undiscovered `repositories`
    */
-  static async createRepositories(repositories) {
+  static async checkRepositories(repositories) {
     console.log(
-      `GITHUB: Preparing to create the ${repositories.length} repositories.`
+      `GITHUB: First checking which of the ${repositories.length} repositories have already been created...`
     );
-    const successfulRepos = [];
+    const successfulRepositories = [];
+    const undiscoveredRepositories = [];
     await Promise.all(
-      repositories.map(async repo => {
+      repositories.map(async repository => {
         try {
-          presentOnGithub = await Github.checkRepository(repo);
-          createdOnGithub = await Github.createRepository(repo);
-          if (Boolean(presentOnGithub) || Boolean(createdOnGithub)) {
-            successfulRepos.push(repo);
-            console.log(`Already on Github: ${presentOnGithub} | Created on Github: ${createdOnGithub} repository for ${repo.slug}`);
-          }
+          await Github.checkRepository(repository);
+          console.log(
+            `Yay!  Found the ${repository.slug} repository in Github.com!`
+          );
+          successfulRepositories.push(repository);
         } catch (error) {
-          console.log(`Error creating or finding repository for ${repo.slug}`);
+          console.log(`Could not find the ${repository.slug} repository`);
+          undiscoveredRepositories.push(repository);
         }
       })
     );
-    if (successfulRepos && successfulRepos.length) {
-      console.log(
-        `GITHUB: Finishing creation of ${successfulRepos.length || 0}/${
-          repositories.length
-        } repositories.`
-      );
-    } else {
-      console.log(
-        `GITHUB: Finished the creation step but 0 new repos were created.`
-      );
-    }
-    return successfulRepos;
+
+    return [successfulRepositories, undiscoveredRepositories];
   }
 
   /**
@@ -50,19 +42,18 @@ class Github {
    * @returns {Bolean} success status
    */
   static async checkRepository(repository) {
-    console.log(
-      `GITHUB: Checking if ${repository.slug} already exists for ${GITHUB_USERNAME}...`
-    );
     try {
-      // First check to see if the repo already exists
-      await request.get({
-        url: "https://api.github.com/user/repos/${repository.slug}",
-        headers: {
-          Authorization: `Bearer ${process.env.GITHUB_TOKEN}`
-        },
-        json: true
-      });
-    } catch (e) {
+          // First check to see if the repo already exists
+          // COMPANY VERSION: url: `https://api.github.com/repos/${process.env.GITHUB_ORGANIZATION}/${repository.slug}?access_token=${process.env.GITHUB_TOKEN}`,
+          await request.get({
+            url: `https://api.github.com/repos/${process.env.GITHUB_USERNAME}/${repository.slug}?access_token=${process.env.GITHUB_TOKEN}`,
+            headers: {
+              "User-Agent": "UA is required",
+              Authorization: `Bearer ${process.env.GITHUB_TOKEN}`
+            },
+            json: true
+          });
+        } catch (e) {
       // something went wrong, log the message
       // but don't kill the script
       const errors = e.error.errors;
@@ -79,15 +70,42 @@ class Github {
   }
 
   /**
+   * Create repositories on Github an array
+   * of Bitbucket repositories
+   *
+   * @param {Array} undiscoveredRepositories
+   * @returns {Array} of successfully created `repositories`
+   */
+  static async createRepositories(successfulRepositories, repositories) {
+    console.log(
+      `GITHUB: Preparing to create the ${repositories.length} repositories that were not found.`
+    );
+
+    await Promise.all(
+      repositories.map(async repository => {
+        try {
+          await Github.createRepository(repository);
+          successfulRepositories.push(repository);
+        } catch (error) {
+          // TODO: If error contains message about not being present.
+          // await Github.createRepository(repo);
+          console.log(
+            `Error creating repository for ${repository.slug}`
+          );
+        }
+      })
+    );
+
+    return successfulRepositories;
+  }
+
+  /**
    * Creates a new repository on Github.
    *
    * @param {Object} repository single Bitbucket repo resource
    * @returns {Bolean} success status
    */
   static async createRepository(repository) {
-    console.log(
-      `GITHUB: Going to try to create the single repo: ${repository.slug}...`
-    );
     try {
       // First check to see if the repo already exists
       // make the request for a new repo
@@ -106,6 +124,10 @@ class Github {
         },
         json: true
       });
+
+      console.log(
+        `GITHUB: Was successful in creating the single repo: ${repository.slug}`
+      );
     } catch (e) {
       // something went wrong, log the message
       // but don't kill the script
@@ -130,23 +152,23 @@ class Github {
    */
   static async pushRepositories(repositories) {
     // keep track of which repos have failed to be pushed to Github
-    const successfulRepos = [];
+    const successfulRepositories = [];
     console.log(
       `GITHUB: Beginning to push the ${repositories.length} repositories`
     );
     await Promise.all(
-      repositories.map(async repo => {
+      repositories.map(async repository => {
         try {
-          await Github.pushRepository(repo);
-          successfulRepos.push(repo);
-          console.log(`successfully pushed repository: ${repo.slug}`);
+          await Github.pushRepository(repository);
+          successfulRepositories.push(repository);
+          console.log(`successfully pushed repository: ${repository.slug}`);
         } catch (e) {
           console.log(e);
-          console.log(`failed to push repository: ${repo.slug}`);
+          console.log(`failed to push repository: ${repository.slug}`);
         }
       })
     );
-    return successfulRepos;
+    return successfulRepositories;
   }
 
   /**
@@ -160,17 +182,17 @@ class Github {
     // push
 
     // path to the local repository
-    const pathToRepo = path.resolve(
+    const pathToRepository = path.resolve(
       __dirname,
       "../repositories/",
       repository.slug
     );
     console.log(
-      `GITHUB: Pushing the repo: ${repository.slug} from this path ${pathToRepo}`
+      `GITHUB: Pushing the repo: ${repository.slug} from this path ${pathToRepository}`
     );
 
     // Push the locally cloned repository to GitHub using the "mirror" option, which ensures that all references, such as branches and tags, are copied to the imported repository.
-    const commands = ` cd ${pathToRepo} \
+    const commands = ` cd ${pathToRepository}/${repository.slug}.git && \
                 git push --mirror https://${process.env.GITHUB_USERNAME}:${process.env.GITHUB_TOKEN}@github.com/${process.env.GITHUB_USERNAME}/${repository.slug}.git`;
     try {
       // initialize repo
