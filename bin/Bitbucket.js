@@ -11,7 +11,7 @@ class Bitbucket {
   static async getRepositories() {
     // use this to compile a list of our repos
     console.log(
-      `BITBUCKET: Getting the repository list for the organization: ${process.env.BITBUCKET_WORKSPACE_ID}`
+      `BITBUCKET: Retrieving ${process.env.BITBUCKET_WORKSPACE_ID}'s repository list from the bitbucket API...`
     );
     const repositoryList = [];
 
@@ -26,38 +26,38 @@ class Bitbucket {
       const url =
         response.next ||
         `https://api.bitbucket.org/2.0/repositories/${process.env.BITBUCKET_WORKSPACE_ID}?page=${currentPage}${pageLength}`;
-      console.log(`BITBUCKET: The current api url being called is: ${url}`);
-      // make a request to the Bitbucket API
+      if (process.env.TEST_MODE === "true") {
+        console.log(`BITBUCKET: The current api url being called is: ${url}`);
+      }
+      // Make a request to the Bitbucket API
       response = await request(url, {
         auth: {
-          // fill in Bitbucket credentials in .env file.  NOTE: This points at a bitbucket organization, if you'd prefer a user, replace: BITBUCKET_WORKSPACE_ID with BITBUCKET_USERNAME
+          // fill in Bitbucket credentials in .env file.  NOTE: This points at a bitbucket organization, if you'd prefer a user, replace: BITBUCKET_WORKSPACE_ID with BITBUCKET_USERNAME TODO: Make this a friendly option in the settings.
           user: process.env.BITBUCKET_WORKSPACE_ID,
           password: process.env.BITBUCKET_APP_PASSWORD
         },
         json: true
       });
 
-      // compile the repos we just got into an array
+      // Compile the repos we just got into an array
       console.log("BITBUCKET: Pushing repository listing into our array.");
       repositoryList.push(...response.values);
 
-      // make sure we query the next page next time we call the API
+      // Make sure we query the next page next time we call the API
       if (process.env.TEST_MODE === "true") {
         console.log(
-          `BITBUCKET: In is in test mode: ${process.env.TEST_MODE}, do not process all paginated repos.  It will only do the first page.`
+          `BITBUCKET: TEST_MODE: ${process.env.TEST_MODE}, do not process all paginated repos.  It will only do the first page and take into account the REPO_LIMIT.`
         );
       } else {
         currentPage++;
       }
 
-      // while there's another page to hit, loop
+      // While there's another page to hit and there is NOT a repo limit, increment.
     } while (
-      response.next &&
-      process.env.REPO_LIMIT &&
-      repositoryList.length <= process.env.REPO_LIMIT
+      response.next && (!process.env.REPO_LIMIT || repositoryList.length <= parseInt(process.env.REPO_LIMIT, 10))
     );
     console.log(
-      `BITBUCKET: Finished building the entire repo list of ${repositoryList.length}.`
+      `BITBUCKET: Finished building ${process.env.BITBUCKET_WORKSPACE_ID}'s entire repo list of ${repositoryList.length} repos.`
     );
     return repositoryList;
   }
@@ -73,13 +73,13 @@ class Bitbucket {
     const successfulRepositories = [];
     await Promise.all(
       repositories.map(async repository => {
-        console.log(`pulling repository ${repository.slug}`);
+        console.log(`Pulling repository ${repository.slug}...`);
         try {
           await Bitbucket.pullRepository(repository);
           successfulRepositories.push(repository);
-          console.log("pulled repository for", repository.slug);
+          console.log(`Successfully pulled the repository: ${repository.slug}`);
         } catch (error) {
-          console.error(`error pulling repository ${repository.slug}`);
+          console.error(`Failed to pull the repository: ${repository.slug}`);
         }
       })
     );
@@ -100,8 +100,7 @@ class Bitbucket {
       "../repositories/",
       repository.slug
     );
-    // console.log(`BITBUCKET: Preparing to setup a directory here: ${pathToRepository} and then mirror clone this repo: ${repository.links.clone[1].href} `)
-    // Creates a brand new local directory for repository.  Navigates into it and mirror clones it from bitbucket.  Finally, adding the remote
+    // Creates a brand new local directory for repository.  Navigates into it and mirror clones it from bitbucket.  TODO: Make adding the remote and effectively syncing both repos a friendly option in the settings.
     let commands = ` mkdir -p ${pathToRepository} \
                 && cd ${pathToRepository} \
                 && git clone --mirror ${repository.links.clone[1].href}`;
@@ -109,7 +108,7 @@ class Bitbucket {
       // initialize repo
       await exec(commands);
     } catch (e) {
-      console.log(`Could not pull the repository ${repository.slug} because of the error: ${e}`);
+      console.log(`Failed to pull the repository: ${repository.slug} because of the error: ${e}`);
     }
   }
 }

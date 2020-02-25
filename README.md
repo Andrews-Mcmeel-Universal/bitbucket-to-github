@@ -1,16 +1,22 @@
 ## Bitbucket to Github Migration - forked
 
-This repository transfers ALL of your Bitbucket repositories to Github while maintaining its privacy status.
+This repository copies ALL of your personal/organizational Bitbucket repositories to your Github account or organization while maintaining its privacy status.
 
 ### Changes made in the fork
 
-- Improved logging for clearer visibility into what's happening during the process.
-  - Including the start and stopping of the main functions within index.js.
-  - Outputting the non-sensitive dotenv vars as they are processed to notify the engineer if variables are not instantiating. (My experience.)
-- Optional organization flags (Bitbucket Organization and Github Teams) that can be used instead of a user.
-- Yarn usage.
-- Testing dotenv flag to only test a single repo.
-- More graceful fallbacks if directories have already been made.
+1. Improved logging for clearer visibility into what's happening during the process.
+
+- Including the start and stopping of the main functions within index.js.
+- Outputting the non-sensitive dotenv vars as they are processed to notify the engineer if variables are not instantiating. (My experience.)
+- Summary for each step in the process along with a final summary at the end. As a bonus, any failed bitbucket repositories will be listed at the end with links back to them in bitbucket.
+- Normalized all the verbiage and naming to be very consistent. IE: repos is now repository (for increased visibility)
+- Prefixed each status log with either BITBUCKET or GITHUB so the engineer knows where it is originating.
+
+2. Optional dotenv variables for organization (Bitbucket Organization and Github Teams) Eventually this will be created into a setting (PR's welcome!! ;-).
+
+3. Yarn usage instead of npm -i instruction.
+4. Testing dotenv flag to only test a subset of repos.
+5. Pragmatic improvement to the github repo creation. This script now checks first if a repo has already been created and will not try to create it again.
 
 ### Requirements
 
@@ -51,11 +57,11 @@ The steps below is how each sequential repository gets processed individually.
 ## TODOS
 
 1. Wrap all console logs into a verbose flag.
-2. Fix testing logic being TEST_MODE and REPO_LIMIT flag
-3. Add optional flag for "mirroring/syncing" a repo to both bitbucket and github.
-4. Improve the failsafes for operations that have already occurred.
-5. Potentially use GM's node service worker prototype to visually represent this utility.
-6. Add back in the dotenv.config() so variables are not required during the command line script.
+2. Add optional flag for "mirroring/syncing" a repo to both bitbucket and github.
+3. Improve the failsafes for operations that have already occurred.
+4. Potentially use GM's node service worker prototype to visually represent this utility.
+5. Add back in the dotenv.config() so variables are not required during the command line script.
+6. Add functionality to cleanup repos after processing.
 
 ## Resources
 

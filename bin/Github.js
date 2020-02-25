@@ -13,7 +13,7 @@ class Github {
    */
   static async checkRepositories(repositories) {
     console.log(
-      `GITHUB: First checking which of the ${repositories.length} repositories have already been created...`
+      `GITHUB: Checking which of your ${repositories.length} repositories have already been created...`
     );
     const successfulRepositories = [];
     const undiscoveredRepositories = [];
@@ -22,11 +22,11 @@ class Github {
         try {
           await Github.checkRepository(repository);
           console.log(
-            `Yay!  Found the ${repository.slug} repository in Github.com!`
+            `Yay!  Discovered your bitbucket repository: ${repository.slug} in Github!`
           );
           successfulRepositories.push(repository);
         } catch (error) {
-          console.log(`Could not find the ${repository.slug} repository`);
+          console.log(`Failed to find repository: ${repository.slug}`);
           undiscoveredRepositories.push(repository);
         }
       })
@@ -153,22 +153,25 @@ class Github {
   static async pushRepositories(repositories) {
     // keep track of which repos have failed to be pushed to Github
     const successfulRepositories = [];
+    const failedRepositories = [];
     console.log(
-      `GITHUB: Beginning to push the ${repositories.length} repositories`
+      `GITHUB: ...Beginning to push the ${repositories.length} bitbucket repositories to your github.`
     );
     await Promise.all(
       repositories.map(async repository => {
         try {
           await Github.pushRepository(repository);
           successfulRepositories.push(repository);
-          console.log(`successfully pushed repository: ${repository.slug}`);
+          console.log(`Successfully pushed repository: ${repository.slug}`);
         } catch (e) {
           console.log(e);
-          console.log(`failed to push repository: ${repository.slug}`);
+          console.log(`Failed to push repository: ${repository.slug}`);
+          failedRepositories.push(repository.slug);
         }
       })
     );
-    return successfulRepositories;
+    return { successfulRepositories, failedRepositories
+  };
   }
 
   /**
@@ -188,7 +191,7 @@ class Github {
       repository.slug
     );
     console.log(
-      `GITHUB: Pushing the repo: ${repository.slug} from this path ${pathToRepository}`
+      `GITHUB: Pushing the repository: ${repository.slug}...`
     );
 
     // Push the locally cloned repository to GitHub using the "mirror" option, which ensures that all references, such as branches and tags, are copied to the imported repository.
@@ -199,7 +202,8 @@ class Github {
       await exec(commands);
     } catch (e) {
       console.log(e);
-      console.log("could not push repository", repository.slug);
+      console.log("Failed to push the repository", repository.slug);
+      throw (e);
     }
   }
 }
