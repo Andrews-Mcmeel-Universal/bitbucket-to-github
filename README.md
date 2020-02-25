@@ -16,43 +16,36 @@ This repository transfers ALL of your Bitbucket repositories to Github while mai
 
 1. Node
 2. Yarn
-3. Save the .env.sample as a new file named: .env and then follow the instructions to fill out all the values, FIRST!
+3. `yarn install`
+4. Create bitbucket app password: https://confluence.atlassian.com/bitbucket/app-passwords-828781300.html _TIP: Bitbucket 2.0 api does not work well with two factor authentication so turn this off temporarily and use the app password with full rights. ('write' on all functions)_
+5. Create github access token for your account: `https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/`
+6. Save the .env.sample as a new file named: .env (\$ cp .env.sample .env) and then follow the instructions next to each variable.
 
 ### General Process Explained
 
-TBD
+The steps below is how each sequential repository gets processed individually.
 
-1. `git clone https://github.com/pouriaa/bitbucket-to-github.git`
+#### Duplicating a Bitbucket repository to Github a Single Time
 
-##### Enter the repo
+1. `git clone --mirror https://bitbucket.com/amu_technology/old-repository.git`
+2. `cd old-repository.git`
+3. `git push --mirror https://github.com/exampleuser/new-repository.git`
+4. `cd ..`
+5. `rm -rf old-repository.git`
 
-`cd bitbucket-to-github/`
+#### Mirroring a Bitbucket repository to Github
 
-##### Install dependencies
-
-`npm i`
-
-##### Make an environment variable file
-
-`cp .env.sample .env`
-
-##### Create an access token on Github
-
-Use `https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/` to create your token.
-
-##### Enter your Github and Bitbucket credentials to `.env`
-
-This repository uses the `dotenv` library to handle configuration variables.
+1. `git clone --mirror https://bitbucket.com/amu_technology/repository-to-mirror.git`
+2. `cd repository-to-mirror.git`
+3. `git remote set-url --push origin https://github.com/abarrows/mirrored`
+4. `git fetch -p origin`
+5. `git push --mirror`
 
 ##### Run the script
 
 ```javascript
-`node -r dotenv/config index.js`;
+`node index.js`;
 ```
-
-## Resources
-
-1. Github command line instructions: https://help.github.com/en/github/importing-your-projects-to-github/importing-a-git-repository-using-the-command-line
 
 ## TODOS
 
